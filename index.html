@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Processing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Processing</h1>
+    <p>Upload an audio file and process it to display results.</p>
+    <input type="file" id="audioFile" accept="audio/*">
+    <button onclick="processAudio()">Process</button>
+    <div class="result" id="result"></div>
+
+    <script>
+        async function query(file) {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch(
+                "https://api-inference.huggingface.co/models/pyannote/speaker-diarization-3.1",
+                {
+                    headers: {
+                        Authorization: "Bearer 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"
+                    },
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+            const result = await response.json();
+            return result;
+        }
+
+        function processAudio() {
+            const fileInput = document.getElementById("audioFile");
+            const resultDiv = document.getElementById("result");
+
+            if (fileInput.files.length === 0) {
+                resultDiv.innerHTML = "<p style='color: red;'>Please upload an audio file.</p>";
+                return;
+            }
+
+            const file = fileInput.files[0];
+            resultDiv.innerHTML = "<p>Processing...</p>";
+
+            query(file).then((response) => {
+                resultDiv.innerHTML = `<pre>${JSON.stringify(response, null, 2)}</pre>`;
+            }).catch((error) => {
+                console.error(error);
+                resultDiv.innerHTML = "<p style='color: red;'>An error occurred while processing the file.</p>";
+            });
+        }
+    </script>
+</body>
+</html>
